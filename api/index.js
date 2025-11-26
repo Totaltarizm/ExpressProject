@@ -5,50 +5,50 @@ const User = require('./models/User');
 const app = express();
 
 app.use(express.json());
-app.use(express.static(__dirname)); // для твоего HTML файла
+app.use(express.static("public"));
 
-// Подключение к MongoDB
+// Підключення до MongoDB
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB connected'))
+    .then(() => console.log('MongoDB підключено'))
     .catch(err => console.log(err));
 
-// --- CRUD маршруты ---
+// --- CRUD маршрути ---
 
-// Получить всех пользователей
+// Отримати всіх користувачів
 app.get('/api/users', async (req, res) => {
-    const users = await User.find();
-    res.json(users);
+  const users = await User.find();
+  res.json(users);
 });
 
-// Получить одного пользователя по ID
+// Отримати одного користувача
 app.get('/api/users/:id', async (req, res) => {
-    const user = await User.findById(req.params.id);
-    res.json(user);
+  const user = await User.findById(req.params.id);
+  res.json(user);
 });
 
-// Создать пользователя
+// Створити користувача
 app.post('/api/users', async (req, res) => {
-    const user = new User({ name: req.body.name, age: req.body.age });
-    await user.save();
-    res.json(user);
+  const user = new User({ name: req.body.name, age: req.body.age });
+  await user.save();
+  res.json(user);
 });
 
-// Изменить пользователя
+// Оновити користувача
 app.put('/api/users', async (req, res) => {
-    const user = await User.findByIdAndUpdate(
-        req.body.id,
-        { name: req.body.name, age: req.body.age },
-        { new: true }
-    );
-    res.json(user);
+  const user = await User.findByIdAndUpdate(
+    req.body.id,
+    { name: req.body.name, age: req.body.age },
+    { new: true }
+  );
+  res.json(user);
 });
 
-// Удалить пользователя
+// Видалити користувача
 app.delete('/api/users/:id', async (req, res) => {
-    const user = await User.findByIdAndDelete(req.params.id);
-    res.json(user);
+  const user = await User.findByIdAndDelete(req.params.id);
+  res.json(user);
 });
 
 // Запуск сервера
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Сервер запущено на порту ${PORT}`));
