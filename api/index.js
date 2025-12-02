@@ -1,54 +1,35 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const User = require('./models/User');
 const app = express();
+const userRoutes = require("./routes/users");
 
 app.use(express.json());
 app.use(express.static("public"));
 
-// Підключення до MongoDB
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB підключено'))
-    .catch(err => console.log(err));
+// Підключення маршрутів
+app.use("/api/users", userRoutes);
 
-// --- CRUD маршрути ---
+// --- Підключення до MongoDB ---
+const mongoHost = process.env.MONGO_DB_HOSTNAME || 'mongodb';
+const mongoPort = process.env.MONGO_DB_PORT || 27017;
+const mongoDb   = process.env.MONGO_DB || 'usersdb';
+const mongoUrl = `mongodb://${mongoHost}:${mongoPort}/${mongoDb}`;
 
-// Отримати всіх користувачів
-app.get('/api/users', async (req, res) => {
-  const users = await User.find();
-  res.json(users);
-});
+const connectWithRetry = () => {
+  console.log('Спроба підключення до MongoDB...');
+  mongoose.connect(mongoUrl)
+    .then(() => {
+      console.log('MongoDB підключено успішно!');
+    })
+    .catch(err => {
+      console.error('Помилка підключення до MongoDB, повторна спроба через 5 секунд', err);
+      setTimeout(connectWithRetry, 5000); // повтор через 5 секунд
+    });
+};
 
-// Отримати одного користувача
-app.get('/api/users/:id', async (req, res) => {
-  const user = await User.findById(req.params.id);
-  res.json(user);
-});
+connectWithRetry();
 
-// Створити користувача
-app.post('/api/users', async (req, res) => {
-  const user = new User({ name: req.body.name, age: req.body.age });
-  await user.save();
-  res.json(user);
-});
-
-// Оновити користувача
-app.put('/api/users', async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.body.id,
-    { name: req.body.name, age: req.body.age },
-    { new: true }
-  );
-  res.json(user);
-});
-
-// Видалити користувача
-app.delete('/api/users/:id', async (req, res) => {
-  const user = await User.findByIdAndDelete(req.params.id);
-  res.json(user);
-});
-
-// Запуск сервера
+// --- Запуск сервера ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Сервер запущено на порту ${PORT}`));
